@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+    <Properties> <!-- 配置日志文件输出目录 -->
+        <Property name="LOG_HOME">./logs</Property>
+    </Properties>
+
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5level %t %class{36} - %msg%n"/>
+    </Console>
+      <!-- INFO级别日志 -->
+      <RollingFile name="info_appender" immediateFlush="true" append="true"
+                   fileName="${LOG_HOME}/info.log" filePattern="${LOG_HOME}/info.%d{yyyy-MM-dd HH_mm_ss}.log.gz">
+          <PatternLayout>
+              <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %class{36}(%L) - %msg%xEx%n</pattern>
+          </PatternLayout>
+          <Policies>
+              <SizeBasedTriggeringPolicy size="10MB" />
+          </Policies>
+          <Filters>
+              <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY" />
+          </Filters>
+      </RollingFile>
+
+      <RollingFile name="debug_appender" immediateFlush="true" append="true"
+                   fileName="${LOG_HOME}/debug.log" filePattern="${LOG_HOME}/debug.%d{yyyy-MM-dd HH_mm_ss}.log.gz">
+          <PatternLayout>
+              <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %class{36}(%L) - %msg%xEx%n</pattern>
+          </PatternLayout>
+          <Policies>
+              <SizeBasedTriggeringPolicy size="10MB" />
+          </Policies>
+          <Filters>
+              <ThresholdFilter level="debug" onMatch="ACCEPT" onMismatch="DENY" />
+          </Filters>
+      </RollingFile>
+
+      <RollingFile name="error_appender" immediateFlush="true" append="true"
+                   fileName="${LOG_HOME}/error.log" filePattern="${LOG_HOME}/error.%d{yyyy-MM-dd HH_mm_ss}.log.gz">
+          <PatternLayout>
+              <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %class{36}(%L) - %msg%xEx%n</pattern>
+          </PatternLayout>
+          <Policies>
+              <SizeBasedTriggeringPolicy size="10MB" />
+          </Policies>
+          <Filters>
+              <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY" />
+          </Filters>
+      </RollingFile>
+
+  </Appenders>
+  <Loggers>
+    <Root level="info">
+      <AppenderRef ref="Console"/>
+      <AppenderRef ref="info_appender"/>
+        <AppenderRef ref="debug_appender"/>
+        <AppenderRef ref="error_appender"/>
+    </Root>
+   <Logger name="snaq.db.ConnectionPool.RawMaxwellConnectionPool" level="off" additivity="false">
+      <AppenderRef ref="Console"/>
+    </Logger>
+   <Logger name="snaq.db.ConnectionPool.MaxwellConnectionPool" level="off" additivity="false">
+      <AppenderRef ref="Console"/>
+    </Logger>
+   <Logger name="snaq.db.ConnectionPool.ReplicationConnectionPool" level="off" additivity="false">
+      <AppenderRef ref="Console"/>
+    </Logger>
+      <logger name="info_log" level="info" includeLocation="true" additivity="true">
+          <appender-ref ref="info_appender"/>
+      </logger>
+
+      <logger name="debug_log" level="debug" includeLocation="true" additivity="true">
+          <appender-ref ref="debug_appender"/>
+      </logger>
+
+      <logger name="error_log" level="error" includeLocation="true" additivity="true">
+          <appender-ref ref="error_appender"/>
+      </logger>
+  </Loggers>
+</Configuration>

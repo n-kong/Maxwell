@@ -185,9 +185,9 @@ public class DataHubConsumer extends Thread {
 
 class DataHubNode {
 
-	// time out
+	// time  out
 	private long time;
-	// record list
+	// Record list
 	private List<RecordEntry> list;
 
 	RecordSchema recordSchema;

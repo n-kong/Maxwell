@@ -90,6 +90,9 @@ public class MaxwellConfig extends AbstractConfig {
 	public String outputFileInterval;
 	public String outputFileSize;
 	public String outputFileQueueSize;
+	public String areaCode;
+	public String dataSource;
+	public String sourceName;
 
 	public String datahubQueueSize;
 	public String accessId;
@@ -249,6 +252,9 @@ public class MaxwellConfig extends AbstractConfig {
 		parser.accepts("output_file_interval","out file time interval").withRequiredArg();
 		parser.accepts("output_file_size", "out file max size").withRequiredArg();
 		parser.accepts("output_file_queue_size", "out file queue size").withRequiredArg();
+		parser.accepts("area_code", "area code").withRequiredArg();
+		parser.accepts("data_source", "data source").withRequiredArg();
+		parser.accepts("source_name", "source name").withRequiredArg();
 
 		parser.section("datahub");
 		parser.accepts("datahub_queue_size", "output datahub queue size").withRequiredArg();
@@ -532,6 +538,10 @@ public class MaxwellConfig extends AbstractConfig {
 		this.outputFileInterval = fetchOption("output_file_interval", options, properties, "10");
 		this.outputFileSize = fetchOption("output_file_size", options, properties, "50");
 		this.outputFileQueueSize = fetchOption("output_file_queue_size", options, properties, "10000");
+		this.areaCode = fetchOption("area_code", options, properties, "330100");
+		this.dataSource = fetchOption("data_source", options, properties, "fh");
+		this.sourceName = fetchOption("source_name", options, properties, "fh");
+
 
 		this.datahubQueueSize = fetchOption("datahub_queue_size", options, properties, "10000");
 		this.accessId = fetchOption("accessId", options, properties, null);

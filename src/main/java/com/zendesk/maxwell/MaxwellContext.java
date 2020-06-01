@@ -336,7 +336,7 @@ public class MaxwellContext {
 					LinkedBlockingQueue<String> queue = new LinkedBlockingQueue<>(Integer.parseInt(this.config.outputFileQueueSize));
 					ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
 					this.producer = new FileProducer(this, queue);
-					singleThreadExecutor.execute(new FileConsumer(this.config.outputFileInterval, this.config.outputFileSize, this.config.outputFile, this.config.outputFileTmp, queue));
+					singleThreadExecutor.execute(new FileConsumer(this.config, queue));
 					break;
 				case "datahub":
 					LinkedBlockingQueue<String> datahubQueue = new LinkedBlockingQueue<>(Integer.parseInt(this.config.datahubQueueSize));

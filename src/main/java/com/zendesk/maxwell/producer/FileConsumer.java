@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.Feature;
 import com.zendesk.maxwell.Maxwell;
+import com.zendesk.maxwell.MaxwellConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +12,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -36,14 +38,18 @@ public class FileConsumer extends Thread {
 	private Map<String, Node> map = new ConcurrentHashMap<>();
 	String filePath;
 	String fileTmpPath;
+	private MaxwellConfig config;
+	private String tableName;
+	private String batchNo;
 	static final Logger LOGGER = LoggerFactory.getLogger(FileConsumer.class);
 
-	public FileConsumer(String interval, String size, String path, String tmpPath, LinkedBlockingQueue<String> queue) throws IOException {
+	public FileConsumer(MaxwellConfig config, LinkedBlockingQueue<String> queue) throws IOException {
+		this.config = config;
 		this.queue = queue;
-		this.filePath = path;
-		this.fileTmpPath = tmpPath;
-		this.interval = interval;
-		this.size = size;
+		this.filePath = config.outputFile;
+		this.fileTmpPath = config.outputFileTmp;
+		this.interval = config.outputFileInterval;
+		this.size = config.outputFileSize;
 	}
 
 	@Override
@@ -59,12 +65,15 @@ public class FileConsumer extends Thread {
 					JSONObject jsonObject = new JSONObject(true);
 					jsonObject.putAll(linkedHashMap);
 					// 表名
-					String tableName = jsonObject.getString("table");
+					tableName = jsonObject.getString("table");
 					Node node = map.get(tableName);
 					// 如果有新表或已有流死亡，则初始化流节点
 					if (null == node || !node.isWriteIsActive()) {
-						String pathTmp = fileTmpPath + "/" + tableName + "_" + System.currentTimeMillis() + ".nb";
-						map.put(tableName, new Node(pathTmp, time));
+						int no = null == node? 1:node.getBatchNo();
+						batchNo =  numFormat(no, 5);
+						String fileName = getFileName();
+						//String pathTmp = fileTmpPath + "/" + tableName + "_" + System.currentTimeMillis() + ".nb";
+						map.put(tableName, new Node(no, fileName, time));
 					}
 					// 解析数据
 					String result = parse(jsonObject);
@@ -94,13 +103,14 @@ public class FileConsumer extends Thread {
 						outputWrite.flush();
 						outputWrite.close();
 						// 输出表名
-						String tableName = entry.getKey();
+						String tName = entry.getKey();
 						LOGGER.info("----");
-						LOGGER.info("Table:{}, Write success num: {}", tableName, messageTotal);
+						LOGGER.info("Table:{}, Write success num: {}", tName, messageTotal);
 						// 流关闭之后，存活状态改为false，下次使用需要再初始化
 						node1.setWriteIsActive(false);
 						// 数量计数器置0
 						node1.initNum();
+						node1.setBatchNo();
 						// 获取文件输出临时路径
 						String tmpPath = node1.getTmpPath();
 						// 文件输出临时路径更改为最终路径
@@ -109,10 +119,28 @@ public class FileConsumer extends Thread {
 					}
 				}
 			} catch (Exception e) {
-				LOGGER.error("Error message is: {}", e.getMessage());
+				LOGGER.error("Error message is: {}", e.getMessage(), e);
 			}
 		}
 
+	}
+
+	public String getFileName() {
+		String fileName = fileTmpPath + "/" + (config.areaCode + "_" + config.dataSource + "_" +
+				config.sourceName + "_" + tableName).toUpperCase() + "_" + System.currentTimeMillis() + "_" + batchNo + ".nb";
+		return fileName;
+	}
+
+	/**
+	 * 数字格式化，不足n位前面补0
+	 * 0:代表前面补充0, length:代表长度为4, d:代表参数为正数型
+	 * 例： 输入：11,5  输出：00011
+	 *
+	 * @param inNum  输入字符
+	 * @param length 补充后字符长度
+	 */
+	public String numFormat(int inNum, int length) {
+		return String.format("%0" + length + "d", inNum);
 	}
 
 	/**
@@ -154,6 +182,7 @@ public class FileConsumer extends Thread {
 		return outStr;
 	}
 
+
 }
 
 
@@ -172,13 +201,24 @@ class Node {
 	private long time;
 	// 流内数据计数器
 	private int num;
+	// 批次号
+	private int batchNo = 1;
 
-	public Node(String tmpPath, long time) {
+	public Node(int no, String tmpPath, long time) {
+		this.batchNo = no;
 		this.writeIsActive = true;
 		this.tmpPath = tmpPath;
 		this.time = time;
 		this.num = 0;
 		initFileWrite();
+	}
+
+	public void setBatchNo() {
+		this.batchNo += 1;
+	}
+
+	public int getBatchNo() {
+		return batchNo;
 	}
 
 	public String getTmpPath() {
